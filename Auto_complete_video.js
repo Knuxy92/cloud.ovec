@@ -1,4 +1,5 @@
-const STID = ""
+const SessionStorage = JSON.parse(sessionStorage.getItem('user'));
+const STID = SessionStorage.idcard
 const QUIZSET = "20"
 
 async function getUnfinishedVideos() {
