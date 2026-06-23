@@ -12,10 +12,11 @@
 
   setInterval(() => {
     const questionElements = document.querySelectorAll(".question-item");
-    
     if (questionElements.length === 0) return;
 
     questionElements.forEach((questionEl) => {
+      if (questionEl.dataset.marked === "true") return;
+
       const textBlock = questionEl.querySelector(".font-weight-bold.text-body-1");
       if (!textBlock) return;
 
@@ -25,27 +26,36 @@
       if (!match) return;
 
       const correctAnswer = match.correct_answer.trim();
+      let hasCheckedAllChoices = true;
 
       questionEl.querySelectorAll(".choice-item").forEach((choiceEl) => {
         const textEl = choiceEl.querySelector(".choice-text");
-        if (!textEl) return;
+        if (!textEl) {
+          hasCheckedAllChoices = false;
+          return;
+        }
 
         const choiceText = textEl.textContent.trim();
 
-        const isAlreadyMarked = choiceEl.style.border.includes("rgb(76, 175, 80)") || choiceEl.style.opacity === "0.25";
-        if (isAlreadyMarked) return;
-
         if (choiceText === correctAnswer) {
-          textEl.innerHTML = `<b>${choiceText} (Correct Answer)</b>`;
+          textEl.innerHTML = `🎯 <b>${choiceText} (ระบบเลือกข้อนี้ให้แล้ว)</b>`;
           choiceEl.style.border = "3px solid #4caf50";
           choiceEl.style.backgroundColor = "rgba(76, 175, 80, 0.15)";
           choiceEl.style.opacity = "1";
+
+          if (typeof choiceEl.click === "function") {
+            choiceEl.click();
+          }
         } else {
           choiceEl.style.opacity = "0.25";
           choiceEl.style.border = "none";
           choiceEl.style.backgroundColor = "transparent";
         }
       });
+
+      if (hasCheckedAllChoices) {
+        questionEl.dataset.marked = "true";
+      }
     });
   }, 500); 
 })();
