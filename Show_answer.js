@@ -1,6 +1,4 @@
 (async function () {
-  window.quizAnswers = [];
-
   if (window.quizAnswers === undefined){
     try {
       const response = await fetch("https://raw.githubusercontent.com/Knuxy92/cloud.ovec/refs/heads/main/allAnswer.json");
