@@ -1,5 +1,5 @@
 (async function () {
-  if (window.quizAnswers === undefined){
+  if (window.quizAnswers === undefined) {
     try {
       const response = await fetch("https://raw.githubusercontent.com/Knuxy92/cloud.ovec/refs/heads/main/allAnswer.json");
       window.quizAnswers = await response.json();
@@ -10,54 +10,42 @@
     }
   }
 
-  const waitForQuestions = () =>
-    new Promise((resolve) => {
-      const interval = setInterval(() => {
-        const elements = document.querySelectorAll(".question-item");
-        if (elements.length > 0) {
-          clearInterval(interval);
-          resolve(elements);
+  setInterval(() => {
+    const questionElements = document.querySelectorAll(".question-item");
+    
+    if (questionElements.length === 0) return;
+
+    questionElements.forEach((questionEl) => {
+      const textBlock = questionEl.querySelector(".font-weight-bold.text-body-1");
+      if (!textBlock) return;
+
+      const questionText = textBlock.textContent.trim();
+      const match = window.quizAnswers.find((item) => item.question === questionText);
+
+      if (!match) return;
+
+      const correctAnswer = match.correct_answer.trim();
+
+      questionEl.querySelectorAll(".choice-item").forEach((choiceEl) => {
+        const textEl = choiceEl.querySelector(".choice-text");
+        if (!textEl) return;
+
+        const choiceText = textEl.textContent.trim();
+
+        const isAlreadyMarked = choiceEl.style.border.includes("rgb(76, 175, 80)") || choiceEl.style.opacity === "0.25";
+        if (isAlreadyMarked) return;
+
+        if (choiceText === correctAnswer) {
+          textEl.innerHTML = `<b>${choiceText} (Correct Answer)</b>`;
+          choiceEl.style.border = "3px solid #4caf50";
+          choiceEl.style.backgroundColor = "rgba(76, 175, 80, 0.15)";
+          choiceEl.style.opacity = "1";
         } else {
-          console.log("%cWaiting for question elements...", "color: #aaaaaa;");
+          choiceEl.style.opacity = "0.25";
+          choiceEl.style.border = "none";
+          choiceEl.style.backgroundColor = "transparent";
         }
-      }, 500);
+      });
     });
-
-  const questionElements = await waitForQuestions();
-
-  let matchCount = 0;
-
-  questionElements.forEach((questionEl) => {
-    const textBlock = questionEl.querySelector(".font-weight-bold.text-body-1");
-    if (!textBlock) return;
-
-    const questionText = textBlock.textContent.trim();
-    const questionId = questionEl.getAttribute("id") || "no-id";
-    const match = window.quizAnswers.find((item) => item.question === questionText);
-
-    if (!match) {
-      console.log(`%cNo answer found for question: "${questionText.substring(0, 30)}..." (${questionId})`, "color: #ff9800;");
-      return;
-    }
-
-    matchCount++;
-    const correctAnswer = match.correct_answer.trim();
-
-    questionEl.querySelectorAll(".choice-item").forEach((choiceEl) => {
-      const textEl = choiceEl.querySelector(".choice-text");
-      if (!textEl) return;
-
-      const choiceText = textEl.textContent.trim();
-
-      if (choiceText === correctAnswer) {
-        textEl.innerHTML = `<b>${choiceText} (Correct Answer)</b>`;
-        choiceEl.style.border = "3px solid #4caf50";
-        choiceEl.style.backgroundColor = "rgba(76, 175, 80, 0.15)";
-      } else {
-        choiceEl.style.opacity = "0.25";
-      }
-    });
-  });
-
-  console.log(`%cDone! Marked ${matchCount}/${questionElements.length} answers successfully`, "color: #00ff00; font-weight: bold; font-size: 14px;");
+  }, 500); 
 })();
