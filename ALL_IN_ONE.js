@@ -3,8 +3,6 @@
   const QUIZ_SET_ID = "20";
   const BASE_URL = "https://cloud.ovec.go.th/vqa_api";
 
-  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
   const user = JSON.parse(sessionStorage.getItem("user"));
 
   if (!user?.idcard) {
@@ -16,7 +14,7 @@
 
   console.log(
     `%c[Session Loaded] Student ID: ${STUDENT_ID}`,
-    "color:#00ff00;font-weight:bold;"
+    "color:#00ff00;font-weight:bold;",
   );
 
   async function postJSON(endpoint, payload) {
@@ -40,10 +38,7 @@
         quiz_set_id: QUIZ_SET_ID,
       };
 
-      const result = await postJSON(
-        "submit_quiz_assignment.php",
-        payload
-      );
+      const result = await postJSON("submit_quiz_assignment.php", payload);
 
       console.log(
         `%c[${index + 1}/${total}] [SUCCESS] ${
@@ -52,86 +47,70 @@
           payload.topic_activities_id
         }`,
         "color:#00ffff;",
-        result
+        result,
       );
 
       return result;
     } catch (err) {
-      console.error(
-        `❌ [${index + 1}/${total}] Failed`,
-        err
-      );
+      console.error(`❌ [${index + 1}/${total}] Failed`, err);
     }
   }
 
   async function getUnfinishedVideos() {
-    const result = await postJSON(
-      "video_progress_fetch.php",
-      {
-        ApiKey: API_KEY,
-        student_id: STUDENT_ID,
-        quiz_set_id: QUIZ_SET_ID,
-      }
-    );
+    const result = await postJSON("video_progress_fetch.php", {
+      ApiKey: API_KEY,
+      student_id: STUDENT_ID,
+      quiz_set_id: QUIZ_SET_ID,
+    });
 
     if (!result?.status || !result?.data?.videos) {
       throw new Error("Fetch Video Failed");
     }
 
     return result.data.videos.filter(
-      (video) => Number(video.is_completed) !== 1
+      (video) => Number(video.is_completed) !== 1,
     );
   }
 
   async function completeVideo(video, index, total) {
     try {
-      const startSession = await postJSON(
-        "video_progress.php",
-        {
-          ApiKey: API_KEY,
-          action: "start_watching",
-          student_id: STUDENT_ID,
-          quiz_set_id: QUIZ_SET_ID,
-          lesson_contents_id: video.lesson_contents_id,
-          topic_activities_id: video.topic_activities_id,
-          lesson_topics_id: video.lesson_topics_id,
-          video_url: video.lesson_contents_path,
-          video_duration: video.video_duration || 0,
-        }
-      );
+      const startSession = await postJSON("video_progress.php", {
+        ApiKey: API_KEY,
+        action: "start_watching",
+        student_id: STUDENT_ID,
+        quiz_set_id: QUIZ_SET_ID,
+        lesson_contents_id: video.lesson_contents_id,
+        topic_activities_id: video.topic_activities_id,
+        lesson_topics_id: video.lesson_topics_id,
+        video_url: video.lesson_contents_path,
+        video_duration: video.video_duration || 0,
+      });
 
       if (!startSession?.data) {
         throw new Error("Create Session Failed");
       }
 
-      const { progress_id, session_token } =
-        startSession.data;
+      const { progress_id, session_token } = startSession.data;
 
-      const completed = await postJSON(
-        "video_progress.php",
-        {
-          ApiKey: API_KEY,
-          action: "complete_video",
-          progress_id,
-          session_token,
-          video_duration: video.video_duration,
-          student_id: STUDENT_ID,
-          lesson_contents_id: video.lesson_contents_id,
-        }
-      );
+      const completed = await postJSON("video_progress.php", {
+        ApiKey: API_KEY,
+        action: "complete_video",
+        progress_id,
+        session_token,
+        video_duration: video.video_duration,
+        student_id: STUDENT_ID,
+        lesson_contents_id: video.lesson_contents_id,
+      });
 
       console.log(
         `%c[${index + 1}/${total}] Video Completed`,
         "color:#00ffff;",
-        completed
+        completed,
       );
 
       return completed;
     } catch (err) {
-      console.error(
-        `❌ Video ${index + 1} Failed`,
-        err
-      );
+      console.error(`❌ Video ${index + 1} Failed`, err);
     }
   }
 
@@ -517,7 +496,7 @@
 
   console.log(
     `%c[INFO] Found ${taskQueue.length} Payload`,
-    "color:#ffee00;font-weight:bold;"
+    "color:#ffee00;font-weight:bold;",
   );
 
   try {
@@ -525,30 +504,20 @@
 
     console.log(
       `%c[INFO] Found ${videos.length} Unfinished Videos`,
-      "color:#ffee00;font-weight:bold;"
+      "color:#ffee00;font-weight:bold;",
     );
 
     for (let i = 0; i < videos.length; i++) {
-      await completeVideo(
-        videos[i],
-        i,
-        videos.length
-      );
+      await completeVideo(videos[i], i, videos.length);
     }
 
     for (let i = 0; i < taskQueue.length; i++) {
-      await sendTask(
-        taskQueue[i],
-        i,
-        taskQueue.length
-      );
-
-      await delay(500);
+      await sendTask(taskQueue[i], i, taskQueue.length);
     }
 
     console.log(
       "%c[DONE] All Tasks Completed",
-      "color:#ffff00;font-weight:bold;font-size:14px;"
+      "color:#ffff00;font-weight:bold;font-size:14px;",
     );
   } catch (err) {
     console.error("❌ Fatal Error", err);
